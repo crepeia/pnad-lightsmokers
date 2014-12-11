@@ -31,6 +31,7 @@ dadosdom <- fread(input='dadosdom.csv', sep='auto', sep2='auto', integer64='doub
 dadospes <- fread(input='dadospes.csv', sep='auto', sep2='auto', integer64='double')
 
 ## Remove unnecessary objects
+## Taynara is here!
 rm(end_dom, end_pes)
 
 # SECTION 2 #####################################################################
