@@ -27,6 +27,11 @@ fwf2csv(fwffile='DOM2008.TXT', csvfile='dadosdom.csv', names=dicdom2008$cod, beg
 fwf2csv(fwffile='PES2008.TXT', csvfile='dadospes.csv', names=dicpes2008$cod, begin=dicpes2008$inicio, end=end_pes)
 
 ## Read data with fread fucntion of data.table package 
+
+rteste <- read.csv("dadospes.csv")
+
+
+
 dadosdom <- fread(input='dadosdom.csv', sep='auto', sep2='auto', integer64='double')
 dadospes <- fread(input='dadospes.csv', sep='auto', sep2='auto', integer64='double')
 
@@ -55,8 +60,6 @@ load("pnad2008.RData")
 
 # WEIGHTS
 
-
-
 library(survey)
 options(survey.lonely.psu = "adjust")
 library(grid)
@@ -65,18 +68,48 @@ ptab  <- subset(dadospes, !is.na(dadospes$PESPET))
 
 ## RECODE VARIABLES -------
 
-### Light Smokers
-#### Cigarrete
-ptab$fumoleve[ptab$V2701 == 3] <- 'Fumante ocasional'
-ptab$fumoleve[ptab$V2701 == 5] <- 'Não Fumante'
-ptab$fumoleve[ptab$V2701 == 1 & ptab$V7201 <= 9] <- 'Fumante leve diário'
-ptab$fumoleve[ptab$V2701 == 1 & ptab$V7201 > 9]  <- 'Fumante pesado diário'
+#Fumante industrializados e não fumantes 
+ptab$fumoleve[ptab$V2703 == 5] <- 'nunca fumante'
+
+# Criar subset com Nunca fumantes
+nuncaFumantes <- subset(ptab, ptab$V2703 == 5)
+
+# Criar subset com fumantes de cigarros industrializados
+cigarroIndust <- subset(ptab, ptab$V2701 !=5 & (ptab$V27091 !=5 | ptab$V27161 !=6))
+
+
+ptab$V28051
+cigarroIndust$fumante[cigarroIndust$V28051 <= 9] <- 'fumante diario leve'
+table(cigarroIndust$fumante)
+table(cigarroIndust$fumo)
+ptab$cigarroIndust[ptab$V28051 > 10] <- 'fumante diario pesado'
+
+
+ptab$cigarroIndust[ptab$V28061 != 6] <- 'fumante ocasional'
+
+
+   
+table(ptab$V2701)
+
+table(ptab$V2701 !=5 & (ptab$V27091 !=5 | ptab$V27161 !=6))
+
+
+sample.pnadPes <- svydesign(
+  id = ~1,
+  data = ptab,
+  weights = ~PESPET
+)
+                                                                                                                                                                                                                                                                                                                                          
+round(prop.table(svytable(~saudeper, sample.pnadPes)),3)*100
+
+svytable(~ptab$V2701, sample.pnadPes)
+
 
 #### Sex
 ptab$sexo[ptab$V0302 == 2]  <- 'Feminino'
 ptab$sexo[ptab$V0302 == 4]  <- 'Masculino'
 ptab$sexo  <- as.factor(ptab$sexo)
-
+table(ptab$sexo)
 #### Age
 ptab$idade[ptab$V8005 > 15 & ptab$V8005 <= 24]  <- '> 15, <= 24 Anos'
 ptab$idade[ptab$V8005 > 25 & ptab$V8005 <= 44]  <- '> 25, <= 44 Anos'
@@ -118,7 +151,6 @@ ptab$dbronquite[ptab$V1312 == 4] <- ' bronquite não'
 
 
 # Create survey design - Needs package survey loaded
-
 
 sample.pnadPes <- svydesign(
   id = ~1,
@@ -227,4 +259,3 @@ sample.pnad  <-  svydesign(
 svytotal(
   ~V4614,
   sample.pnad
-)
