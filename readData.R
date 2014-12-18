@@ -30,8 +30,15 @@ fwf2csv(fwffile='PES2008.TXT', csvfile='dadospes.csv', names=dicpes2008$cod, beg
 dadosdom <- fread(input='dadosdom.csv', sep='auto', sep2='auto', integer64='double')
 dadospes <- fread(input='dadospes.csv', sep='auto', sep2='auto', integer64='double')
 
+teste  <- subset(dadospes, dadospes$SELEC ==1)
+
+
 ## Remove unnecessary objects
 rm(end_dom, end_pes)
+
+table(dadospes$PESPET)
+summary(dadospes$PESPET)
+table(dadospes$SELEC)
 
 # SECTION 2 #####################################################################
 # HOW TO OPEN RDATA -------------------------------------------------------------
@@ -122,9 +129,13 @@ ptab$dbronquite[ptab$V1312 == 4] <- ' bronquite não'
 
 sample.pnadPes <- svydesign(
   id = ~1,
-  data = ptab,
+  data = teste,
   weights = ~PESPET
 )
+
+
+round(prop.table(svytable(~V2701, sample.pnadPes)),3)*100
+
 
 ptabFP  <- subset(ptab, ptab$fumoleve == 'Fumante pesado diário')
 ptabFLD  <- subset(ptab, ptab$fumoleve == 'Fumante leve diário')
